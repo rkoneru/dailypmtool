@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: project-planner
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AUTH_USER
+        sync: false
+      - key: AUTH_PASSWORD
+        sync: false
+      - key: TOKEN_SECRET
+        sync: false

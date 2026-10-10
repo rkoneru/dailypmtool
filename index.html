@@ -1,0 +1,440 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Project Planner</title>
+  <meta name="description" content="Offline-first project planning tool with a planner sheet and a live dashboard.">
+  <meta name="theme-color" content="#1d4ed8">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css?v=dashboard-simple-20261010f">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="app-header no-print">
+    <div class="app-header__brand">
+      <img src="icons/icon-32.png" alt="" width="24" height="24">
+      <span>Project Planner</span>
+    </div>
+
+    <nav class="tabs" role="tablist" aria-label="Pages">
+      <button type="button" class="tab-btn is-active" id="tab-dashboard" role="tab" aria-selected="true" aria-controls="page-dashboard">Dashboard</button>
+      <button type="button" class="tab-btn" id="tab-planner" role="tab" aria-selected="false" aria-controls="page-planner">Planner</button>
+      <button type="button" class="tab-btn" id="tab-gantt" role="tab" aria-selected="false" aria-controls="page-gantt">Board</button>
+    </nav>
+
+    <div class="app-header__actions">
+      <span class="save-indicator" id="save-indicator" aria-live="polite">Saved</span>
+      <button type="button" class="btn btn-icon-only" id="btn-export-panel" aria-label="Open settings" title="Settings">&#9881;</button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="page-planner" class="page" role="tabpanel" aria-labelledby="tab-planner">
+      <div class="print-page">
+        <header class="sheet-header">
+          <h1 class="editable" contenteditable="true" data-field="projectName" data-placeholder="Project name"></h1>
+          <div class="sheet-header__row">
+            <label class="field-label">Objective
+              <span class="editable editable--inline" contenteditable="true" data-field="objective" data-placeholder="What is this project trying to achieve?"></span>
+            </label>
+            <label class="field-label">Due date
+              <input type="date" class="field-input" data-field="dueDate">
+            </label>
+          </div>
+        </header>
+
+        <section class="card">
+          <div class="card__head">
+            <h2>Milestones</h2>
+            <button type="button" class="btn btn-small no-print" data-action="add-milestone">+ Add Milestone</button>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table" id="milestones-table">
+              <thead>
+                <tr>
+                  <th class="col-num">#</th>
+                  <th>Milestone</th>
+                  <th class="col-progress">Progress</th>
+                  <th class="col-date">Due</th>
+                  <th class="col-check">Done</th>
+                  <th class="col-action no-print"></th>
+                </tr>
+              </thead>
+              <tbody id="milestones-body"></tbody>
+            </table>
+          </div>
+          <label class="field-label field-label--block">Achievement / Reward
+            <span class="editable" contenteditable="true" data-field="reward" data-placeholder="What's the reward for hitting these milestones?"></span>
+          </label>
+        </section>
+
+        <section class="card" hidden>
+          <div class="card__head">
+            <h2>Tasks</h2>
+            <button type="button" class="btn btn-small no-print" data-action="add-task">+ Add Task</button>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table" id="tasks-table">
+              <thead>
+                <tr>
+                  <th class="col-num">#</th>
+                  <th class="col-drag no-print">Drag</th>
+                  <th>Task</th>
+                  <th class="col-date">Start</th>
+                  <th class="col-date">End</th>
+                  <th class="col-prio">Priority</th>
+                  <th class="col-check">Done</th>
+                  <th class="col-action no-print"></th>
+                </tr>
+              </thead>
+              <tbody id="tasks-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card__head">
+            <h2>Tasks</h2>
+            <button type="button" class="btn btn-small no-print" data-action="add-dash-task">+ Add Task</button>
+          </div>
+          <div class="planner-task-filters no-print">
+            <label class="field-label">Search
+              <input type="text" id="planner-task-search" class="field-input" placeholder="Search task, assignee, comments">
+            </label>
+            <label class="field-label">Status
+              <select id="planner-task-filter-status" class="field-input">
+                <option value="all">All statuses</option>
+                <option value="Not Started">Not Started</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Complete">Complete</option>
+                <option value="Overdue">Overdue</option>
+                <option value="On Hold">On Hold</option>
+              </select>
+            </label>
+            <label class="field-label">Priority
+              <select id="planner-task-filter-prio" class="field-input">
+                <option value="all">All priorities</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </label>
+            <label class="field-label">Sort
+              <select id="planner-task-sort" class="field-input">
+                <option value="manual">Manual order</option>
+                <option value="status">Status</option>
+                <option value="priority">Priority</option>
+                <option value="start">Start date</option>
+                <option value="end">End date</option>
+                <option value="name">Task name</option>
+              </select>
+            </label>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table" id="dash-tasks-table">
+              <thead>
+                <tr>
+                  <th class="col-num">#</th>
+                  <th class="col-drag no-print">&#8597;</th>
+                  <th class="col-taskname">Task</th>
+                  <th class="col-assignee">Assignee</th>
+                  <th class="col-date">Start</th>
+                  <th class="col-date">End</th>
+                  <th class="col-days">Days</th>
+                  <th class="col-status">Status</th>
+                  <th class="col-prio">Priority</th>
+                  <th class="col-comments">Comments</th>
+                  <th class="col-action no-print"></th>
+                </tr>
+              </thead>
+              <tbody id="dash-tasks-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card__head"><h2>Notes</h2></div>
+          <div class="editable editable--notes" contenteditable="true" data-field="notes" data-placeholder="Anything else worth writing down..."></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="page-dashboard" class="page is-active" role="tabpanel" aria-labelledby="tab-dashboard">
+      <div class="print-page">
+        <header class="dash-header">
+          <div class="dash-header__title">
+            <span class="editable" contenteditable="true" data-field="projectName" data-placeholder="Project name"></span>
+            <span class="dash-header__badge" id="dash-status-badge">ON TRACK</span>
+          </div>
+          <div class="dash-header__meta">
+            <label class="field-label">Date
+              <input type="date" class="field-input" data-field="dashDate">
+            </label>
+            <label class="field-label">Status
+              <input type="text" class="field-input" data-field="dashStatus" placeholder="ON TRACK">
+            </label>
+            <div class="stat-pill">
+              <span class="stat-pill__value" id="dash-pct-complete">0%</span>
+              <span class="stat-pill__label">Complete</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="dashboard-kpis" id="dashboard-kpis" aria-label="Project summary metrics"></section>
+
+        <section class="card">
+          <div class="card__head"><h2>Project Health Summary</h2></div>
+          <div class="summary-formula">
+            <label class="field-label field-label--block">Summary
+              <textarea class="field-input" data-field="dashSummary" rows="3" placeholder="Describe health and next actions..."></textarea>
+            </label>
+            <div class="formula-pill">
+              <span class="formula-pill__label">Completion formula</span>
+              <strong id="dash-summary-formula">0% complete</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card__head"><h2>Task Timeline</h2></div>
+          <div class="table-scroll">
+            <div class="gantt-chart" id="dash-gantt"></div>
+          </div>
+        </section>
+
+        <section class="chart-grid">
+          <div class="card">
+            <div class="card__head"><h2>Task Status</h2></div>
+            <div class="chart-with-legend">
+              <div class="pie-holder" id="status-pie"></div>
+              <ul class="legend" id="status-legend"></ul>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card__head"><h2>Task Priority</h2></div>
+            <div class="chart-with-legend">
+              <div class="pie-holder" id="priority-pie"></div>
+              <ul class="legend" id="priority-legend"></ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="chart-grid">
+          <div class="card">
+            <div class="card__head"><h2>Budget</h2></div>
+            <div class="budget-fields">
+              <label class="field-label">Planned
+                <input type="number" min="0" step="1" class="field-input" data-field="budgetPlanned">
+              </label>
+              <label class="field-label">Actual
+                <input type="number" min="0" step="1" class="field-input" data-field="budgetActual">
+              </label>
+            </div>
+            <div class="bar-chart bar-chart--h" id="budget-chart"></div>
+          </div>
+          <div class="card">
+            <div class="card__head"><h2>Pending Items</h2></div>
+            <div class="pending-fields">
+              <label class="field-label">Decisions
+                <input type="number" min="0" step="1" class="field-input" data-field="pending.decisions">
+              </label>
+              <label class="field-label">Actions
+                <input type="number" min="0" step="1" class="field-input" data-field="pending.actions">
+              </label>
+              <label class="field-label">Change Requests
+                <input type="number" min="0" step="1" class="field-input" data-field="pending.changeRequests">
+              </label>
+            </div>
+            <div class="bar-chart bar-chart--v" id="pending-chart"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card__head">
+            <h2>Tasks (Read Only)</h2>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table" id="dash-readonly-tasks-table">
+              <thead>
+                <tr>
+                  <th class="col-num">#</th>
+                  <th class="col-taskname">Task</th>
+                  <th class="col-assignee">Assignee</th>
+                  <th class="col-date">Start</th>
+                  <th class="col-date">End</th>
+                  <th class="col-days">Days</th>
+                  <th class="col-status">Status</th>
+                  <th class="col-prio">Priority</th>
+                  <th class="col-comments">Comments</th>
+                </tr>
+              </thead>
+              <tbody id="dash-readonly-tasks-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="chart-grid">
+          <div class="card">
+            <div class="card__head"><h2>Status Summary</h2></div>
+            <div class="table-scroll">
+              <table class="data-table summary-table" id="status-summary-table"></table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card__head"><h2>Priority Summary</h2></div>
+            <div class="table-scroll">
+              <table class="data-table summary-table" id="priority-summary-table"></table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="page-gantt" class="page" role="tabpanel" aria-labelledby="tab-gantt">
+      <div class="print-page">
+        <section class="card">
+          <div class="card__head"><h2>Workflow Board</h2></div>
+          <p class="hint">Editable board: drag a task card to another column to update its status.</p>
+          <div class="gantt-board" id="gantt-board-lanes"></div>
+        </section>
+
+         <section class="card" hidden>
+          <div class="card__head"><h2>Timeline</h2></div>
+           <div class="gantt-page__filters">
+            <label class="field-label">Status filter
+              <select id="gantt-filter-status" class="field-input">
+                <option value="all">All statuses</option>
+                <option value="Not Started">Not Started</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Complete">Complete</option>
+                <option value="Overdue">Overdue</option>
+                <option value="On Hold">On Hold</option>
+              </select>
+            </label>
+            <label class="field-label">Sort timeline
+              <select id="gantt-sort-mode" class="field-input">
+                <option value="start">By start date</option>
+                <option value="priority">By priority</option>
+                <option value="status">By status</option>
+              </select>
+            </label>
+          </div>
+          <p class="hint">Editable Gantt: drag bars to shift task dates, or drag bar handles to change start/end.</p>
+          <div class="gantt-page-timeline" id="gantt-page-timeline"></div>
+        </section>
+
+        <section class="card">
+          <div class="card__head"><h2>Gantt Chart</h2></div>
+          <p class="hint">Detailed, color-coded roadmap view for Board tasks.</p>
+          <div class="gantt-chart gantt-overview" id="gantt-page-gantt-chart"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div class="panel-overlay no-print" id="export-overlay" hidden>
+    <div class="panel" role="dialog" aria-modal="true" aria-labelledby="export-panel-title">
+      <div class="panel__head">
+        <h2 id="export-panel-title">Export &amp; Share</h2>
+        <button type="button" class="btn btn-icon" id="btn-close-panel" aria-label="Close">X</button>
+      </div>
+
+      <div class="panel__section">
+        <h3>Export as PDF</h3>
+        <p class="hint">Opens the browser's print dialog with a print-friendly layout. Choose "Save as PDF" as the destination.</p>
+        <button type="button" class="btn btn-primary" id="btn-export-pdf">Print / Save as PDF</button>
+      </div>
+
+      <div class="panel__section">
+        <h3>Export as CSV</h3>
+        <p class="hint">Downloads a spreadsheet-friendly snapshot of your planner and dashboard tasks.</p>
+        <button type="button" class="btn btn-primary" id="btn-export-csv">Download CSV</button>
+      </div>
+
+      <div class="panel__section">
+        <h3>Excel Import / Export</h3>
+        <p class="hint">Export to Excel for planning and dashboard work, or import a planner workbook back into the backend.</p>
+        <div class="panel__actions">
+          <button type="button" class="btn btn-secondary" id="btn-export-excel-template">Download Excel Template</button>
+          <button type="button" class="btn btn-secondary" id="btn-export-excel">Download Excel (.xlsx)</button>
+          <label class="btn btn-secondary" for="file-import-excel">Import Excel (.xlsx/.xls)
+            <input type="file" id="file-import-excel" accept=".xlsx,.xls" hidden>
+          </label>
+        </div>
+      </div>
+
+      <div class="panel__section">
+        <h3>Export as PNG</h3>
+        <p class="hint">Captures the current page as an image and downloads it.</p>
+        <button type="button" class="btn btn-primary" id="btn-export-png">Download PNG</button>
+      </div>
+
+      <div class="panel__section">
+        <h3>Share via Email</h3>
+        <p class="hint">
+          Browsers can't attach files to an email automatically. Download the PDF or PNG above first,
+          then use this to open your email app with a message ready - attach the downloaded file yourself.
+        </p>
+        <label class="field-label field-label--block">To
+          <input type="email" class="field-input" id="share-to" placeholder="name@example.com">
+        </label>
+        <label class="field-label field-label--block">Subject
+          <input type="text" class="field-input" id="share-subject">
+        </label>
+        <label class="field-label field-label--block">Message
+          <textarea class="field-input" id="share-body" rows="4"></textarea>
+        </label>
+        <button type="button" class="btn btn-primary" id="btn-share-email">Open Email App</button>
+      </div>
+
+      <div class="panel__section">
+        <h3>Backend Connectivity</h3>
+        <p class="hint">Use real API mode for authenticated backend sync, mock mode for local API simulation, or auto mode to fallback to mock if the server is unavailable.</p>
+        <label class="field-label field-label--block">API Mode
+          <select class="field-input" id="api-mode-select">
+            <option value="auto">Auto (real, fallback to mock)</option>
+            <option value="real">Real backend only</option>
+            <option value="mock">Mock API only</option>
+          </select>
+        </label>
+        <label class="field-label field-label--block">Backend URL
+          <input type="url" class="field-input" id="api-base-url" placeholder="http://localhost:3000">
+        </label>
+        <label class="field-label field-label--block">Backend Username
+          <input type="text" class="field-input" id="api-username" placeholder="admin">
+        </label>
+        <label class="field-label field-label--block">Backend Password
+          <input type="password" class="field-input" id="api-password" placeholder="Enter password">
+        </label>
+        <div class="panel__actions">
+          <button type="button" class="btn btn-secondary" id="btn-api-signin">Sign in backend</button>
+          <button type="button" class="btn btn-secondary" id="btn-api-signout">Sign out</button>
+          <button type="button" class="btn btn-secondary" id="btn-api-health">Check health</button>
+        </div>
+        <p class="hint" id="api-auth-status" aria-live="polite">Mode: auto | Auth: signed out</p>
+      </div>
+
+      <div class="panel__section">
+        <h3>Backup &amp; Restore</h3>
+        <p class="hint">Download a JSON snapshot of your planner data, restore from a previous backup, or sync this planner to the lightweight backend API.</p>
+        <div class="panel__actions">
+          <button type="button" class="btn btn-secondary" id="btn-export-json">Download JSON backup</button>
+          <button type="button" class="btn btn-secondary" id="btn-sync-save-panel">Save to backend</button>
+          <button type="button" class="btn btn-secondary" id="btn-sync-load-panel">Load from backend</button>
+          <button type="button" class="btn btn-secondary" id="btn-reset-panel">Reset sample data</button>
+          <button type="button" class="btn btn-secondary" id="btn-install" hidden>Install App</button>
+          <label class="btn btn-secondary" for="file-import-json">Restore backup
+            <input type="file" id="file-import-json" accept="application/json" hidden>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js?v=dashboard-simple-20261010g"></script>
+</body>
+</html>
